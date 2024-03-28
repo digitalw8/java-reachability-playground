@@ -1,5 +1,17 @@
 version: 0.1
+
+env:
+  secrets-manager:
+    TOKEN: firstSecret:tokenForSonar
+
 phases:
   build:
     commands:
-      - mvn verify sonar:sonar -Dsonar.projectKey=javaprojectaws2024 -Dsonar.organization=javaprojectaws2024 -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=f44349f22558f00cb379c2a6f7cb653b02f10851
+      - mvn verify sonar:sonar -Dsonar.projectKey=javaprojectaws2024 -Dsonar.organization=javaprojectaws2024 -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$TOKEN
+      - sleep 5
+      - |
+        quality_status=$(curl -s -u $TOKEN: https://sonarcloud.io/api/qualitygates/project_status?projectKey=javaprojectaws2024 | jq -r '.projectStatus.status')
+        echo "SonarCloud analysis status is $quality_status"
+        if [ "$quality_status" = "ERROR" ]; then
+          exit 1
+        fi
